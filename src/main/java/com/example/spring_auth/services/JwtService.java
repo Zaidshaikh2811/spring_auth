@@ -2,11 +2,14 @@ package com.example.spring_auth.services;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.Builder;
 
 import java.security.Key;
 import java.util.Base64;
+import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
 
 
@@ -34,6 +37,32 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+    }
+
+
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+
+    public Boolean validateToken(String token, String username) {
+        final String extractedUsername = extractUsername(token);
+        return (extractedUsername.equals(username) && !isTokenExpired(token));
+    }
+
+
+    private String generateToken(Map<String ,Object> claims, String username) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(username)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 *  1)) // 10 hours
+                .signWith(getSignKey(), SignatureAlgorithm.HS256)
+                .compact();
     }
 
     // ✅ Generates the signing key from the SECRET string

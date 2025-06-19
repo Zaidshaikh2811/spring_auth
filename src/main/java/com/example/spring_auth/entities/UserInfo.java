@@ -16,7 +16,7 @@ public class UserInfo {
 
 @Id
 @Column(name = "user_id")
-private long userId;
+private String userId;
 
 
     private String username;
